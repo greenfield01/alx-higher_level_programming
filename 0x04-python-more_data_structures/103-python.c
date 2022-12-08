@@ -1,31 +1,59 @@
-import ctypes
+#include <stdio.h>
+#include <Python.h>
 
-lib = ctypes.CDLL('./libPython.so')
-lib.print_python_list.argtypes = [ctypes.py_object]
-lib.print_python_bytes.argtypes = [ctypes.py_object]
-s = b"Hello"
-lib.print_python_bytes(s);
-b = b'\xff\xf8\x00\x00\x00\x00\x00\x00';
-lib.print_python_bytes(b);
-b = b'What does the \'b\' character do in front of a string literal?';
-lib.print_python_bytes(b);
-l = [b'Hello', b'World']
-lib.print_python_list(l)
-del l[1]
-lib.print_python_list(l)
-l = l + [4, 5, 6.0, (9, 8), [9, 8, 1024], b"Holberton", "Betty"]
-lib.print_python_list(l)
-l = []
-lib.print_python_list(l)
-l.append(0)
-lib.print_python_list(l)
-l.append(1)
-l.append(2)
-l.append(3)
-l.append(4)
-lib.print_python_list(l)
-l.pop()
-lib.print_python_list(l)
-l = ["Holberton"]
-lib.print_python_list(l)
-lib.print_python_bytes(l);
+
+/**
+ * print_python_bytes - print some basic info about Python bytes objects
+ * @p: python object
+ * Return: nothing
+ **/
+void print_python_bytes(PyObject *p)
+{
+  char *s;
+  Py_ssize_t len, i;
+
+  printf("[.] bytes object info\n");
+  if (!PyBytes_Check(p))
+    printf("  [ERROR] Invalid Bytes Object\n");
+  else
+    {
+      PyBytes_AsStringAndSize(p, &s, &len);
+      printf("  size: %lu\n", len);
+      printf("  trying string: %s\n", s);
+      if (len > 10)
+	len = 10;
+      else
+	len++;
+      printf("  first %lu bytes: ", len);
+      for (i = 0; i < len - 1; i++)
+	printf("%02x ", s[i] & 0xff);
+      printf("%02x\n", s[len - 1] & 0xff);
+    }
+}
+
+
+/**
+ * print_python_list - print some basic info about Python lists
+ * @p: python object
+ * Return: nothing
+ **/
+void print_python_list(PyObject *p)
+{
+  Py_ssize_t i;
+  PyObject *in_list;
+
+  if (PyList_Check(p))
+    {
+      printf("[*] Python list info\n");
+     printf("[*] Size of the Python List = %lu\n", PyList_Size(p));
+      printf("[*] Allocated = %lu\n", ((PyListObject *)p)->allocated);
+      for (i = 0; i < PyList_Size(p); i++)
+	{
+	  in_list = PySequence_GetItem(p, i);
+	  printf("Element %lu: %s\n", i,
+		 in_list->ob_type->tp_name);
+	  if (strcmp(in_list->ob_type->tp_name, "bytes") == 0)
+	    print_python_bytes(in_list);
+	}
+    }
+}
