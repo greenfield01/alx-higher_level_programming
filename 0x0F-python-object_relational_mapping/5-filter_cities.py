@@ -1,15 +1,23 @@
 #!/usr/bin/python3
-# List all cities from the hbtn_0e_0_usa database that
+"""
+Takes in the name of a state as an argument and lists all cities of that
+state, using the database hbtn_0e_4_usa.
+"""
 
-import sys
+from sys import argv
 import MySQLdb
 
-
 if __name__ == "__main__":
-    db = MySQLdb.connect(user=sys.argv[1], passwd=sys.argv[2], db=sys.argv[3])
+    db = MySQLdb.connect(
+            host='localhost',
+            port=3306,
+            user=argv[1],
+            passwd=argv[2],
+            db=argv[3],
+            charset='utf8')
     cur = db.cursor()
-    query = "SELECT * FROM cities INNER JOIN states
-    ON cities.state_id = states.id ORDER BY cities.id"
-    cur.execute(query)
-    [", ".join(print(row[2]) for row in cur.fetchall()
-               if row[4] == sys.argv[4])]
+    cur.execute("SELECT * FROM `cities` as `cur` \
+                INNER JOIN `states` as `st` \
+                ON `cur`.`state_id` = `st`.`id` \
+                ORDER BY `cur`.`id`")
+    print(", ".join([ct[2] for ct in cur.fetchall() if ct[4] == argv[4]]))
